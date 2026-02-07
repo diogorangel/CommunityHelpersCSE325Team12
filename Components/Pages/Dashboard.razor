@@ -1,0 +1,160 @@
+@page "/dashboard"
+@using CommunityHelpers.Blazor.Models
+@using CommunityHelpers.Blazor.Data
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@attribute [Authorize]
+@rendermode InteractiveServer 
+
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@inject AuthenticationStateProvider AuthStateProvider
+
+<PageTitle>Community Dashboard</PageTitle>
+
+<div class="container py-4">
+    <header class="text-center mb-5">
+        <h1 class="display-5 fw-bold">Community Dashboard</h1>
+        <p class="text-muted">Browse all neighborly requests.</p>
+    </header>
+
+    @* Filters *@
+    <section class="mb-4 p-3 bg-light rounded shadow-sm">
+        <div class="row align-items-end">
+            <div class="col-md-4">
+                <label class="form-label fw-bold">Filter by Category:</label>
+                <select class="form-select" @bind="SelectedCategory">
+                    <option value="All">All Categories</option>
+                    <option value="Groceries">Groceries</option>
+                    <option value="Yard Work">Yard Work</option>
+                    <option value="Tech Support">Tech Support</option>
+                    <option value="Moving">Moving Furniture</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-primary w-100" @onclick="ApplyFilter">Filter</button>
+            </div>
+        </div>
+    </section>
+
+    @* Task Grid *@
+    <div class="row g-4">
+        @foreach (var task in filteredRequests)
+        {
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 shadow-sm border-primary">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="badge bg-secondary">@task.Category</span>
+                            <span class="fw-bold @(task.Status == "Pending" ? "text-primary" : "text-success")">
+                                @task.Status
+                            </span>
+                        </div>
+                        <h5 class="card-title">@task.Title</h5>
+                        <p class="card-text text-muted small">@task.Description</p>
+
+                        @* ATTACHMENT DISPLAY *@
+                        @if (!string.IsNullOrEmpty(task.AttachmentPath))
+                        {
+                            <div class="mt-3 mb-3 text-center">
+                                <img src="@task.AttachmentPath" class="img-fluid rounded border shadow-sm" style="max-height: 180px; width: auto; object-fit: cover;" alt="Task attachment" />
+                            </div>
+                        }
+                        
+                        <hr />
+                        <div class="small">
+                            <p class="mb-1 text-muted"><strong>Created by:</strong> @task.RequesterId</p>
+                            @if (!string.IsNullOrEmpty(task.VolunteerId))
+                            {
+                                <p class="mb-0 text-success"><strong>Assigned to:</strong> @(task.VolunteerId == currentUserName ? "You" : task.VolunteerId)</p>
+                            }
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent border-0 pb-3">
+                        @if (string.IsNullOrEmpty(task.VolunteerId))
+                        {
+                            <button class="btn btn-primary w-100" @onclick="() => ClaimTask(task)">
+                                Claim Task
+                            </button>
+                        }
+                        else if (task.VolunteerId == currentUserName && task.Status != "Completed")
+                        {
+                            @* UNCLAIM BUTTON *@
+                            <button class="btn btn-warning w-100 fw-bold" @onclick="() => UnclaimTask(task)">
+                                <i class="bi bi-x-circle me-1"></i> Cannot complete? Unclaim
+                            </button>
+                        }
+                        else
+                        {
+                            <div class="alert alert-info py-2 mb-0 text-center small fw-bold">
+                                Assigned to: @(task.VolunteerId == currentUserName ? "You" : task.VolunteerId)
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private string SelectedCategory = "All";
+    private string currentUserName = "Anonymous";
+    private List<HelpRequest> allRequests = new();
+    private List<HelpRequest> filteredRequests = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        currentUserName = authState.User.Identity?.Name ?? "Anonymous";
+        await LoadTasks();
+    }
+
+    private async Task LoadTasks()
+    {
+        using var context = DbFactory.CreateDbContext();
+        
+        // Loads ALL requests created by any user
+        allRequests = await context.HelpRequests
+            .OrderByDescending(r => r.Id)
+            .ToListAsync();
+            
+        ApplyFilter();
+    }
+
+    private void ApplyFilter()
+    {
+        filteredRequests = SelectedCategory == "All" 
+            ? allRequests 
+            : allRequests.Where(r => r.Category == SelectedCategory).ToList();
+    }
+
+    private async Task ClaimTask(HelpRequest request)
+    {
+        if (currentUserName == "Anonymous") return;
+        using var context = DbFactory.CreateDbContext();
+        var dbTask = await context.HelpRequests.FirstOrDefaultAsync(r => r.Id == request.Id);
+        
+        if (dbTask != null && string.IsNullOrEmpty(dbTask.VolunteerId))
+        {
+            dbTask.Status = "In-Progress";
+            dbTask.VolunteerId = currentUserName;
+            await context.SaveChangesAsync();
+            await LoadTasks();
+        }
+    }
+
+    private async Task UnclaimTask(HelpRequest request)
+    {
+        using var context = DbFactory.CreateDbContext();
+        var dbTask = await context.HelpRequests.FirstOrDefaultAsync(r => r.Id == request.Id);
+
+        if (dbTask != null && dbTask.VolunteerId == currentUserName)
+        {
+            dbTask.Status = "Pending";
+            dbTask.VolunteerId = null;
+            await context.SaveChangesAsync();
+            await LoadTasks();
+        }
+    }
+}

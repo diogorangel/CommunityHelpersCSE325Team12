@@ -1,0 +1,43 @@
+/* ==================== Status Badges (Custom) ==================== */
+.badge-pending {
+    background-color: var(--highlight-color);
+    color: #212529;
+    border: 1px solid #e5a50a;
+}
+
+.badge-in-progress {
+    background-color: #0dcaf0;
+    color: #fff;
+    border: 1px solid #0aa2c0;
+}
+
+.badge-completed {
+    background-color: var(--success-color);
+    color: #fff;
+    border: 1px solid #1e8a3e;
+}
+
+/* ==================== Layout Enhancements ==================== */
+.main-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: #fff;
+    min-height: 100vh;
+    box-shadow: 0 0 20px rgba(0,0,0,0.05);
+}
+
+/* Garante que o rodapé ou elementos de ação fiquem sempre visíveis */
+.sticky-action-bar {
+    position: sticky;
+    bottom: 0;
+    background: white;
+    padding: 1rem;
+    border-top: 1px solid #dee2e6;
+    z-index: 1020;
+}
+.alert-secondary {
+    font-size: 0.9rem;
+    border-style: dashed;
+    background-color: #f8f9fa;
+    color: #6c757d;
+}

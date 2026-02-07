@@ -1,88 +1,90 @@
 # Team Project Community Helpers - CSE 325 Project
+Community Helpers is a responsive web application designed to bridge the gap between local residents needing assistance and community volunteers. This version is built using Blazor Server with Interactive Components for a seamless user experience.
 
-Community Helpers is a responsive web application designed to bridge the gap between local residents needing assistance and community volunteers.
+# 👥 Team Members
+Author: Diogo Rangel Dos Santos
 
-## 👥 Team Members
-* Author : Diogo Rangel Dos Santos
+🛠️ Project Scope & Features
+User Authentication: Secure login and registration using ASP.NET Core Identity.
 
-## 🛠️ Project Scope & Features
-* **User Authentication:** Secure login and registration using ASP.NET Core Identity.
-* **Help Dashboard:** A centralized hub to view, create, and claim "Help Requests."
-* **Status Tracking:** Real-time updates for tasks (Pending, In-Progress, Completed).
-* **Category Filtering:** Sort tasks by types like Yard Work, Groceries, or Tech Support.
-* **Database Integration:** Real-time data storage using SQLite.
+Interactive Dashboard: A centralized hub to view all community requests with real-time updates.
 
----
+Claim & Unclaim System: Volunteers can claim a task or release it if they are unable to complete it.
 
-## 🚀 Setup & Execution Instructions
+Attachments: Users can upload images (e.g., photos of the problem) when creating a request.
 
+Status Tracking: Real-time visibility for tasks: Pending, In-Progress, and Completed.
+
+Category Filtering: Quickly sort tasks by types like Yard Work, Groceries, Tech Support, or Moving.
+
+Database Integration: Reliable data storage using Entity Framework Core and SQLite.
+
+# 🚀 Setup & Execution Instructions
 Follow these steps to get the project running on your local machine.
 
-### 1. Prerequisites
-* [Download .NET 8.0 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
-* VS Code with the **C# Dev Kit** extension.
+1. Prerequisites
+.NET 10.0 SDK (or current version used in project)
 
-### 2. Installation
-Clone the repository and enter the project directory:
-```bash
-git clone [https://github.com/diogorangel/CommunityHelpersCSE325Team12.git](https://github.com/diogorangel/CommunityHelpersCSE325Team12.git)
+EF Core Tools: Install via dotnet tool install --global dotnet-ef
+
+VS Code with the C# Dev Kit extension.
+
+2. Installation & Database Setup
+Clone the repository and prepare the database:
+
+Bash
+# Clone the repository
+git clone https://github.com/diogorangel/CommunityHelpersCSE325Team12.git
+
+# Navigate to the web project folder
 cd CommunityHelpersCSE325Team12/CommunityHelpers.Web
 
-1. Open the terminal in the CommunityHelpersCSE325Team12 folder.
-2. Execute the command below:
+# Restore dependencies
+dotnet restore
 
-	dotnet watch --project CommunityHelpers.Web/CommunityHelpers.Web.csproj
-
-This will compile and run the main web project.
-
-If you prefer to run without hot reload, use:
-
-	dotnet run --project CommunityHelpers.Web/CommunityHelpers.Web.csproj
-
-The site will be available at http://localhost:5000 or http://localhost:5001 (SSL).
-
-3. Database Initialization
-
-Before running the app, you must apply the migrations to create your local app.db file:
-
-Bash
+# Apply migrations to create the local SQLite database (app.db)
 dotnet ef database update
-
-4. Running the Project
-
-To start the application with Hot Reload (auto-updates when you save code):
+3. Running the Project
+To start the application with Hot Reload (the app will automatically refresh when you save code changes):
 
 Bash
-dotnet watch run
+dotnet watch
+The site will be available at:
 
+HTTPS: https://localhost:7xxx (Check terminal for specific port)
 
-The site will be available at https://localhost:5001 or http://localhost:5000.
+HTTP: http://localhost:5xxx
 
-💡 Useful Commands for New Users
+# 💡 Useful Commands
 Development & Maintenance
+Create a Migration: (Run after changing models)
 
-Install SQLite Support: (If not already present) dotnet add package Microsoft.EntityFrameworkCore.Sqlite
+dotnet ef migrations add NameOfYourChange
 
-Create a New Migration: (If you change the Models) dotnet ef migrations add NameOfYourChange
+Update Database: dotnet ef database update
 
-Restore Dependencies: dotnet restore
+Clean Build: (Use if the file is locked by a ghost process)
 
-Project Structure
+dotnet clean
 
-/Controllers: Contains the logic for handling requests (e.g., HelpRequestsController.cs).
+Kill Locked Process (Windows): taskkill /f /im CommunityHelpers.Blazor.exe
 
-/Models: Defines the data structure (e.g., HelpRequest.cs).
+Project Structure (Blazor)
+/Components/Pages: Contains the .razor files (Dashboard, MyRequests, CreateRequest).
 
-/Views: Contains the HTML/Razor files for the user interface.
+/Models: Defines the data structure (e.g., HelpRequest.cs with AttachmentPath).
 
-/Data: Contains the Database Context and Migrations.
+/Data: Contains the ApplicationDbContext.cs and migrations.
 
-📅 Project Timeline
+/wwwroot/uploads: Where user-uploaded images are stored.
 
-Phase 1: Foundation - Repository setup, Architecture, and Initial Design.
+# 📅 Project Timeline
+Phase 1: Foundation - Repository setup, Blazor Server architecture, and initial design.
 
 Phase 2: Core Development - Database setup and CRUD for Help Requests.
 
-Phase 3: Security - Identity implementation and Form Validation.
+Phase 3: Security & Interaction - Identity implementation, interactive "Claim" logic, and form validation.
 
-Phase 4: Quality - Responsive testing and Final Documentation.
+Phase 4: Advanced Features - Image upload system, "Unclaim" functionality, and English translation.
+
+Phase 5: Quality Assurance - Final documentation and responsive testing across devices.

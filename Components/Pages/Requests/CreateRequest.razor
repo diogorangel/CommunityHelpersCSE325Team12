@@ -1,0 +1,126 @@
+@page "/requests/create"
+@using CommunityHelpers.Blazor.Models
+@using CommunityHelpers.Blazor.Data
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Hosting
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@attribute [Authorize]
+
+@inject IWebHostEnvironment Environment
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Nav
+
+<PageTitle>Post a Help Request</PageTitle>
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h3 class="mb-4 fw-bold">Post a Help Request</h3>
+
+            <EditForm Model="newRequest" OnValidSubmit="HandleSubmit">
+                <DataAnnotationsValidator />
+                <ValidationSummary class="text-danger small" />
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Title</label>
+                    <InputText @bind-Value="newRequest.Title" class="form-control" placeholder="Briefly describe what you need" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Category</label>
+                    <InputSelect @bind-Value="newRequest.Category" class="form-select">
+                        <option value="">Select a category</option>
+                        <option value="Groceries">Groceries</option>
+                        <option value="Yard Work">Yard Work</option>
+                        <option value="Tech Support">Tech Support</option>
+                        <option value="Moving">Moving Furniture</option>
+                    </InputSelect>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Description</label>
+                    <InputTextArea @bind-Value="newRequest.Description" class="form-control" rows="4" placeholder="Give more details about your request..." />
+                </div>
+
+                @* ATTACHMENT FIELD *@
+                <div class="mb-4 p-3 border rounded bg-light">
+                    <label class="form-label fw-bold"><i class="bi bi-paperclip"></i> Attachment (Image)</label>
+                    <InputFile OnChange="HandleFileSelected" class="form-control" accept=".jpg,.jpeg,.png" />
+                    <div class="form-text">Max size: 5MB. Formats: JPG, PNG.</div>
+                    @if (isUploading) 
+                    { 
+                        <div class="mt-2 text-primary">
+                            <span class="spinner-border spinner-border-sm"></span> Uploading...
+                        </div> 
+                    }
+                </div>
+
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-success btn-lg" disabled="@isUploading">
+                        Post Request
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    private HelpRequest newRequest = new();
+    private bool isUploading = false;
+    private IBrowserFile? selectedFile;
+
+    private void HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        selectedFile = e.File;
+    }
+
+    private async Task HandleSubmit()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        // Assign the logged-in user to the request
+        newRequest.RequesterId = user.Identity?.Name ?? "Anonymous";
+
+        if (selectedFile != null)
+        {
+            isUploading = true;
+            try 
+            {
+                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(selectedFile.Name);
+                var uploadsFolder = Path.Combine(Environment.WebRootPath, "uploads");
+                var path = Path.Combine(uploadsFolder, fileName);
+                
+                if (!Directory.Exists(uploadsFolder))
+                {
+                    Directory.CreateDirectory(uploadsFolder);
+                }
+
+                // Standard max size is 512KB, so we increase it to 5MB
+                await using var stream = selectedFile.OpenReadStream(maxAllowedSize: 1024 * 1024 * 5); 
+                await using var fs = new FileStream(path, FileMode.Create);
+                await stream.CopyToAsync(fs);
+
+                newRequest.AttachmentPath = $"/uploads/{fileName}";
+            }
+            catch (Exception ex)
+            {
+                // Handle upload error (log it or show to user)
+                Console.WriteLine($"Upload error: {ex.Message}");
+            }
+            finally
+            {
+                isUploading = false;
+            }
+        }
+
+        using var context = DbFactory.CreateDbContext();
+        context.HelpRequests.Add(newRequest);
+        await context.SaveChangesAsync();
+        
+        Nav.NavigateTo("/dashboard");
+    }
+}

@@ -1,12 +1,10 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using CommunityHelpers.Web.Models; // Adicione esta linha para ele reconhecer o modelo
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using CommunityHelpers.Blazor.Models;
 
-namespace CommunityHelpers.Web.Data;
+namespace CommunityHelpers.Blazor.Data;
 
-public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) 
-    : IdentityDbContext(options)
+public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : IdentityDbContext<ApplicationUser>(options)
 {
-    // Esta linha diz ao .NET: "Crie uma tabela chamada HelpRequests baseada na classe HelpRequest"
     public DbSet<HelpRequest> HelpRequests { get; set; }
 }
