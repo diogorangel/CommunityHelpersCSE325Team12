@@ -1,0 +1,28 @@
+﻿@{
+    ViewData["Title"] = "Bem-vindo";
+}
+
+<div class="text-center py-5">
+    <h1 class="display-4 fw-bold text-primary">Community Helpers</h1>
+    <p class="lead">Connecting those who need help with neighborhood volunteers.</p>
+    
+    <div class="mt-4">
+        <a asp-controller="HelpRequests" asp-action="Index" class="btn btn-primary btn-lg px-4 gap-3">Browse Requests</a>
+        <a asp-controller="HelpRequests" asp-action="Create" class="btn btn-outline-secondary btn-lg px-4">Ask for Help</a>
+    </div>
+</div>
+
+<div class="row mt-5 text-center">
+    <div class="col-md-4">
+        <h3>🏠 Local</h3>
+        <p>Help people who live on your own street or neighborhood.</p>
+    </div>
+    <div class="col-md-4">
+        <h3>🤝 Volunteer</h3>
+        <p>Use your skills in gardening, tech, or shopping to do good.</p>
+    </div>
+    <div class="col-md-4">
+        <h3>✅ Simple</h3>
+        <p>Manage your requests and track status in real time.</p>
+    </div>
+</div>

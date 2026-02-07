@@ -1,0 +1,27 @@
+# .NET Core build folders
+[Db]in/
+[Oo]bj/
+
+# Entity Framework & SQLite
+# We ignore the local database file so everyone starts with a clean one
+app.db
+app.db-shm
+app.db-wal
+
+# Visual Studio / VS Code temporary files
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Environment & Publishing
+publish/
+bin/Release/
+obj/Release/
+appsettings.Development.json
+
+# Operating System files
+.DS_Store
+Thumbs.db
