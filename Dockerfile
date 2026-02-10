@@ -3,7 +3,7 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 COPY . .
 
-# Find and build the project
+# Restore and build using automatic file search (finds the .csproj regardless of folder structure)
 RUN dotnet restore $(find . -name "*.csproj")
 RUN dotnet build $(find . -name "*.csproj") -c Release -o /app/build
 
@@ -16,7 +16,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 
-# Create the uploads folder inside the app directory
+# Local uploads folder (inside the container's writable layer)
 RUN mkdir -p wwwroot/uploads && chmod 777 wwwroot/uploads
 
 EXPOSE 80
