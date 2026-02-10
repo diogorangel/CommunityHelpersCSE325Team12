@@ -2,36 +2,32 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-# 1. Find ANY .csproj file in the current directory or subdirectories and copy it to the root
-COPY *.sln ./
-COPY **/*.csproj ./
-# This command moves the csproj to where the build expects it if it's not in a subfolder
-RUN find . -name "*.csproj" -exec cp {} . \;
-
-# 2. Restore dependencies
-RUN dotnet restore
-
-# 3. Copy everything from the repository
+# 1. Copy everything first to ensure all folders exist in the build context
 COPY . .
 
-# 4. Build the project
-# This uses 'dotnet build' on the current directory
-RUN dotnet build -c Release -o /app/build
+# 2. MOVE into the specific project folder (based on your GitHub structure)
+WORKDIR "/src/CommunityHelpersCSE325Team12"
+
+# 3. Restore dependencies pointing to the specific project file
+RUN dotnet restore "CommunityHelpers.Blazor.csproj"
+
+# 4. Build the project in Release mode
+RUN dotnet build "CommunityHelpers.Blazor.csproj" -c Release -o /app/build
 
 # Publish Stage
 FROM build AS publish
-RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "CommunityHelpers.Blazor.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Final Stage (Runtime)
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 
-# Create storage for SQLite and Images
+# Create storage directory for SQLite and Uploads with proper permissions
 RUN mkdir -p /app/wwwroot/uploads && chmod 777 /app/wwwroot/uploads
 
 EXPOSE 80
 EXPOSE 443
 
-# Match this to your actual output DLL name
+# Important: The ENTRYPOINT must match the generated DLL name (usually the project file name)
 ENTRYPOINT ["dotnet", "CommunityHelpers.Blazor.dll"]
