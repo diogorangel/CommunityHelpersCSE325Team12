@@ -82,4 +82,9 @@ app.MapRazorComponents<App>()
 // Adds Identity endpoints for Login, Logout, and Register
 app.MapAdditionalIdentityEndpoints();
 
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    db.Database.Migrate();
+}
 app.Run();
