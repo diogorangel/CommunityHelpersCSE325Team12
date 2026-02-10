@@ -7,7 +7,8 @@ using CommunityHelpers.Blazor.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- 1. SERVIÇOS DO BLAZOR ---
+// --- 1. BLAZOR SERVICES ---
+// Adds support for Razor Components and enables Interactive Server Side Rendering (SSR)
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
@@ -22,25 +23,25 @@ builder.Services.AddAuthentication(options =>
     })
     .AddIdentityCookies();
 
-// --- CONFIGURAÇÃO DO BANCO DE DADOS (VERSÃO ROBUSTA) ---
+// --- 2. DATABASE CONFIGURATION (ROBUST VERSION) ---
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
-// 1. Registra a Factory (Para seus componentes Razor)
+// Register the DbContext Factory (Required for Blazor Server components using IDbContextFactory)
 builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
     options.UseSqlite(connectionString));
 
-// 2. Registra o DbContext Scoped (Para o Identity e EF Tools)
-// Ele vai buscar a mesma configuração que a Factory já possui
+// Register the Scoped DbContext (Required for Identity and EF Migration Tools)
+// It retrieves the same configuration defined in the Factory above
 builder.Services.AddScoped(p => 
     p.GetRequiredService<IDbContextFactory<ApplicationDbContext>>().CreateDbContext());
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-// --- 3. CONFIGURAÇÃO DO IDENTITY ---
+// --- 3. IDENTITY CONFIGURATION ---
 builder.Services.AddIdentityCore<ApplicationUser>(options =>
     {
-        options.SignIn.RequireConfirmedAccount = false; // Facilitar o teste local
+        options.SignIn.RequireConfirmedAccount = false; // Set to false to simplify local testing
         options.Password.RequireDigit = false;
         options.Password.RequiredLength = 6;
         options.Password.RequireNonAlphanumeric = false;
@@ -54,7 +55,7 @@ builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSe
 
 var app = builder.Build();
 
-// --- 4. PIPELINE DE REQUISIÇÕES (MIDDLEWARE) ---
+// --- 4. REQUEST PIPELINE (MIDDLEWARE) ---
 if (app.Environment.IsDevelopment())
 {
     app.UseMigrationsEndPoint();
@@ -67,16 +68,18 @@ else
 
 app.UseHttpsRedirection();
 
-// Importante para carregar CSS, JS e Imagens da wwwroot
+// Essential for loading CSS, JS, and user-uploaded images from wwwroot/uploads
 app.UseStaticFiles();
 
+// Protects forms against Cross-Site Request Forgery (required for EditForm)
 app.UseAntiforgery();
 
-// Mapeamento dos componentes Blazor
+// Map Blazor components and enable Interactive Server Render Mode globally
+
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
-// Adiciona os endpoints de Login, Logout e Register
+// Adds Identity endpoints for Login, Logout, and Register
 app.MapAdditionalIdentityEndpoints();
 
 app.Run();

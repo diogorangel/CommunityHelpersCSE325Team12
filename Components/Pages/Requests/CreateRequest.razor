@@ -6,6 +6,7 @@
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Authorization
 @attribute [Authorize]
+@rendermode InteractiveServer
 
 @inject IWebHostEnvironment Environment
 @inject IDbContextFactory<ApplicationDbContext> DbFactory
@@ -19,7 +20,8 @@
         <div class="col-md-8">
             <h3 class="mb-4 fw-bold">Post a Help Request</h3>
 
-            <EditForm Model="newRequest" OnValidSubmit="HandleSubmit">
+            @* Added FormName to identify the form during POST *@
+            <EditForm Model="newRequest" OnValidSubmit="HandleSubmit" FormName="CreateHelpRequestForm">
                 <DataAnnotationsValidator />
                 <ValidationSummary class="text-danger small" />
 
@@ -68,7 +70,9 @@
 </div>
 
 @code {
-    private HelpRequest newRequest = new();
+    [SupplyParameterFromForm] // Important for .NET 8/9 form handling
+    private HelpRequest newRequest { get; set; } = new();
+    
     private bool isUploading = false;
     private IBrowserFile? selectedFile;
 
@@ -99,7 +103,7 @@
                     Directory.CreateDirectory(uploadsFolder);
                 }
 
-                // Standard max size is 512KB, so we increase it to 5MB
+                // Increase max size to 5MB
                 await using var stream = selectedFile.OpenReadStream(maxAllowedSize: 1024 * 1024 * 5); 
                 await using var fs = new FileStream(path, FileMode.Create);
                 await stream.CopyToAsync(fs);
@@ -108,7 +112,6 @@
             }
             catch (Exception ex)
             {
-                // Handle upload error (log it or show to user)
                 Console.WriteLine($"Upload error: {ex.Message}");
             }
             finally
