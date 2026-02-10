@@ -20,7 +20,6 @@
         <div class="col-md-8">
             <h3 class="mb-4 fw-bold">Post a Help Request</h3>
 
-            @* Added FormName to identify the form during POST *@
             <EditForm Model="newRequest" OnValidSubmit="HandleSubmit" FormName="CreateHelpRequestForm">
                 <DataAnnotationsValidator />
                 <ValidationSummary class="text-danger small" />
@@ -70,11 +69,17 @@
 </div>
 
 @code {
-    [SupplyParameterFromForm] // Important for .NET 8/9 form handling
-    private HelpRequest newRequest { get; set; } = new();
+    [SupplyParameterFromForm]
+    private HelpRequest newRequest { get; set; } = default!;
     
     private bool isUploading = false;
     private IBrowserFile? selectedFile;
+
+    // Fix for Warning BL0008: Initialize only if the form hasn't supplied a value
+    protected override void OnInitialized()
+    {
+        newRequest ??= new();
+    }
 
     private void HandleFileSelected(InputFileChangeEventArgs e)
     {
@@ -86,7 +91,6 @@
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
 
-        // Assign the logged-in user to the request
         newRequest.RequesterId = user.Identity?.Name ?? "Anonymous";
 
         if (selectedFile != null)
@@ -103,7 +107,6 @@
                     Directory.CreateDirectory(uploadsFolder);
                 }
 
-                // Increase max size to 5MB
                 await using var stream = selectedFile.OpenReadStream(maxAllowedSize: 1024 * 1024 * 5); 
                 await using var fs = new FileStream(path, FileMode.Create);
                 await stream.CopyToAsync(fs);
