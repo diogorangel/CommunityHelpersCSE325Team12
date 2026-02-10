@@ -4,6 +4,10 @@ Community Helpers is a responsive web application designed to bridge the gap bet
 # 👥 Team Members
 Author: Diogo Rangel Dos Santos
 
+Link of the project live : https://communityhelperscse325team12.onrender.com
+
+User to acess - [user]
+
 🛠️ Project Scope & Features
 User Authentication: Secure login and registration using ASP.NET Core Identity.
 
